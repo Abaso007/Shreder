@@ -56,7 +56,7 @@ class Shreder(Badges):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         try:
-            ssh.connect(host, port=int(port), username=username, password=password)
+            ssh.connect(host, port=port, username=username, password=password)
             self.password = password
         except Exception:
             pass
@@ -77,18 +77,15 @@ class Shreder(Badges):
         """
 
         with open(dictionary, 'r') as f:
-            threads = list()
             lines = f.read().split('\n')
 
-            for password in lines:
-                if password.strip():
-                    threads.append(
-                        threading.Thread(
-                            target=self.connect,
-                            args=[host, port, username, password]
-                        )
-                    )
-
+            threads = [
+                threading.Thread(
+                    target=self.connect, args=[host, port, username, password]
+                )
+                for password in lines
+                if password.strip()
+            ]
             line = "/-\\|"
             counter = 0
             tried = 1
@@ -98,7 +95,8 @@ class Shreder(Badges):
                     if counter >= len(line):
                         counter = 0
                     self.print_process(
-                        f"Processing... {line[counter]} | Passwords tried: {tried}/{str(len(threads))}", end=''
+                        f"Processing... {line[counter]} | Passwords tried: {tried}/{len(threads)}",
+                        end='',
                     )
 
                     ssh_delay(delay)
